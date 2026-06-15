@@ -43,9 +43,9 @@
       "pr_auc": 0.04345046216671797
     }
   },
-  "models": {
-    "xgb_regressor": "models/xgb_regressor.json",
-    "xgb_classifier": "models/xgb_classifier.json",
-    "random_forest": "models/random_forest_classifier.joblib"
+  "model_files": {
+    "xgb_regressor": "xgb_regressor.json",
+    "xgb_classifier": "xgb_classifier.json",
+    "random_forest": "random_forest_classifier.joblib"
   }
 }
