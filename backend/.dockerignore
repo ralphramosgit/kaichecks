@@ -1,0 +1,21 @@
+# Files ignored when building the Docker image.
+# This lives at the build context root (backend/) so docker build reads it.
+
+# Python caches and virtual environments.
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.venv/
+**/venv/
+
+# Notebooks and training byproducts are not needed in the runtime image.
+**/*.ipynb
+**/.ipynb_checkpoints/
+machine_learning/figures/
+
+# Docs and local notes.
+**/*.md
+
+# OS and editor cruft.
+.DS_Store
+.vscode/

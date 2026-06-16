@@ -1,0 +1,23 @@
+# Local testing for the Kaimaemae API container.
+#
+# Run from the backend/docker/ folder:
+#   docker compose up --build
+# Then open http://localhost:8000/docs
+#
+# The build context is the parent backend/ folder so the Dockerfile can copy in
+# both the fastAPI app and the trained models.
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kaimaemae-api:latest
+    container_name: kaimaemae-api
+    ports:
+      - "8000:8000"
+    environment:
+      # Override CORS origins here when wiring up the frontend, e.g.
+      # KAIMAEMAE_CORS_ORIGINS: "http://localhost:5173"
+      KAIMAEMAE_CORS_ORIGINS: "*"
+    restart: unless-stopped
