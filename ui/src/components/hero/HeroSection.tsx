@@ -3,8 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Waves } from "lucide-react";
 
-import { OahuIsland } from "@/components/map/OahuIsland";
-import { WaveBackground } from "@/components/map/WaveBackground";
+import { SilkBackground } from "@/components/ui/SilkBackground";
 import { Button } from "@/components/ui/Button";
 
 import { HeroHighlights } from "./HeroHighlights";
@@ -16,17 +15,7 @@ import { HeroHighlights } from "./HeroHighlights";
 export function HeroSection({ onEnter }: { onEnter: () => void }) {
   return (
     <section className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden px-6 py-16">
-      <WaveBackground />
-
-      {/* Decorative island floating behind the headline. */}
-      <motion.div
-        className="pointer-events-none absolute left-1/2 top-[42%] h-[42vw] w-[42vw] max-h-[420px] max-w-[420px] -translate-x-1/2 -translate-y-1/2 opacity-25"
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 0.25, scale: 1 }}
-        transition={{ duration: 1.2, ease: "easeOut" }}
-      >
-        <OahuIsland />
-      </motion.div>
+      <SilkBackground />
 
       <div className="relative z-10 flex max-w-3xl flex-col items-center text-center">
         <motion.span

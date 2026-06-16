@@ -88,7 +88,7 @@ export const INTENSITY_PRESETS: Record<
     pattern: [10, 14, 9, 18, 22, 16, 24],
   },
   storm: {
-    label: "Kona storm",
+    label: "Severe storm",
     description: "Major storm with intense recent downpours.",
     pattern: [18, 26, 22, 30, 38, 44, 52],
   },

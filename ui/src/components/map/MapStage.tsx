@@ -1,55 +1,58 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { Navigation } from "lucide-react";
 
-import { WaveBackground } from "./WaveBackground";
-import { OahuIsland } from "./OahuIsland";
-import { SafetyHeatmap } from "./SafetyHeatmap";
-import { BeachPins } from "./BeachPins";
+import { SilkBackground } from "@/components/ui/SilkBackground";
+import { WaveSpinner } from "@/components/ui/WaveSpinner";
+
 import { MapLegend } from "./MapLegend";
 
 /**
- * The central map stage: animated ocean, the Oahu landmass, an optional risk
- * heatmap, and all beach pins. The island, heatmap, and pins share one
- * projection box so every layer stays aligned.
+ * Central map stage: the silky water shader as the ocean, the real Oahu map
+ * floating on top, and a legend with the heatmap toggle. The Leaflet map is
+ * client only, so it is loaded dynamically with a themed placeholder.
  */
+const OahuMap = dynamic(() => import("./OahuMap").then((m) => m.OahuMap), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full w-full items-center justify-center">
+      <WaveSpinner />
+    </div>
+  ),
+});
+
 export function MapStage() {
   const [heatmapVisible, setHeatmapVisible] = useState(false);
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <WaveBackground />
+      <SilkBackground />
 
-      {/* Shared projection box. Aspect ratio matches the Oahu bounding box. */}
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.92, y: 24 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-          className="relative aspect-[13/10] w-full max-w-[min(78vw,1100px)]"
-        >
-          <OahuIsland />
-          <SafetyHeatmap visible={heatmapVisible} />
-          <BeachPins />
-
-          {/* Island label. */}
-          <div className="pointer-events-none absolute left-1/2 top-[40%] -translate-x-1/2 text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-ocean-700/80 backdrop-blur-sm">
-              <Navigation className="h-3 w-3" />
-              Oahu
-            </span>
-          </div>
-        </motion.div>
+      <div className="absolute inset-0">
+        <OahuMap heatmapVisible={heatmapVisible} />
       </div>
 
-      {/* Legend pinned to the lower center of the stage. */}
-      <div className="absolute bottom-5 left-1/2 z-20 -translate-x-1/2">
+      {/* Island label. */}
+      <div className="pointer-events-none absolute left-1/2 top-4 z-[500] -translate-x-1/2">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/60 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-ocean-700/80 backdrop-blur-sm">
+          <Navigation className="h-3 w-3" />
+          Oahu
+        </span>
+      </div>
+
+      {/* Legend with heatmap toggle, pinned lower center. */}
+      <div className="absolute bottom-5 left-1/2 z-[500] -translate-x-1/2">
         <MapLegend
           heatmapVisible={heatmapVisible}
           onToggleHeatmap={() => setHeatmapVisible((value) => !value)}
         />
+      </div>
+
+      {/* Map data credit (coastline derived from OpenStreetMap, ODbL). */}
+      <div className="pointer-events-none absolute bottom-1.5 right-2 z-[500] text-[10px] font-medium text-ocean-800/45">
+        Coastline &copy; OpenStreetMap
       </div>
     </div>
   );

@@ -3,10 +3,11 @@
 import { useMemo, useState } from "react";
 import { BarChart3, Sparkles } from "lucide-react";
 
-import { Panel, PanelHeader } from "@/components/ui/Panel";
+import { CollapsiblePanel } from "@/components/ui/CollapsiblePanel";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { useSimulation } from "@/context/SimulationContext";
 import { generateFindings, summarizeIsland } from "@/lib/insights";
+import { formatPercent } from "@/lib/utils";
 
 import { StatGrid } from "./StatGrid";
 import { SafetyDistributionChart } from "./SafetyDistributionChart";
@@ -21,8 +22,9 @@ const CHART_OPTIONS = [
 ];
 
 /**
- * Results panel: a generated island summary, headline stats, a switchable
- * chart (safety distribution or per-coast risk), and the key findings.
+ * Results panel. Collapses to a one-liner; expands to a generated island
+ * summary, headline stats, a switchable chart (safety distribution or per-coast
+ * risk), and the key findings.
  */
 export function DataResultsPanel() {
   const { result, scenario } = useSimulation();
@@ -38,16 +40,18 @@ export function DataResultsPanel() {
   );
 
   return (
-    <Panel
-      className="flex w-[380px] max-w-[calc(100vw-2rem)] flex-col"
+    <CollapsiblePanel
+      className="w-[380px] max-w-[calc(100vw-2rem)]"
       delay={0.35}
+      icon={<BarChart3 className="h-5 w-5" />}
+      title="Data and findings"
+      subtitle="Island-wide results for this scenario"
+      badge={
+        <span className="rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-600 ring-1 ring-ocean-100">
+          {formatPercent(result.averageProbability)} avg risk
+        </span>
+      }
     >
-      <PanelHeader
-        icon={<BarChart3 className="h-5 w-5" />}
-        title="Data and findings"
-        subtitle="Island-wide results for the current scenario"
-      />
-
       <div className="scroll-island max-h-[46vh] space-y-4 overflow-y-auto px-5 py-4">
         {/* Generated summary banner. */}
         <div className="rounded-2xl bg-sage-50 p-3 ring-1 ring-sage-200">
@@ -86,6 +90,6 @@ export function DataResultsPanel() {
           <KeyFindings findings={findings} />
         </div>
       </div>
-    </Panel>
+    </CollapsiblePanel>
   );
 }

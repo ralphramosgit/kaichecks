@@ -2,8 +2,9 @@
 
 import { CloudRain, Droplets } from "lucide-react";
 
-import { Panel, PanelHeader } from "@/components/ui/Panel";
+import { CollapsiblePanel } from "@/components/ui/CollapsiblePanel";
 import { useSimulation } from "@/context/SimulationContext";
+import { INTENSITY_PRESETS } from "@/lib/constants";
 import { rainfallPressure } from "@/lib/simulation";
 import { formatPercent } from "@/lib/utils";
 
@@ -14,9 +15,10 @@ import { RegionFocus } from "./RegionFocus";
 import { SimulationActions } from "./SimulationActions";
 
 /**
- * Top-left control panel. Composes the storm intensity preset, the editable
- * seven-day rainfall pattern, season, storm focus, a live runoff readout, and
- * the run/reset actions. All edits update the simulation immediately.
+ * Top-left control panel. Collapses to a single row; expands to the storm
+ * intensity preset, the editable seven-day rainfall pattern, season, storm
+ * focus, a live runoff readout, and the run/reset actions. All edits update the
+ * simulation immediately.
  */
 export function RainfallControlPanel() {
   const {
@@ -31,15 +33,24 @@ export function RainfallControlPanel() {
   } = useSimulation();
 
   const pressure = rainfallPressure(result.features);
+  const intensityLabel =
+    scenario.intensity === "custom"
+      ? "Custom storm"
+      : INTENSITY_PRESETS[scenario.intensity].label;
 
   return (
-    <Panel className="w-[360px] max-w-[calc(100vw-2rem)]" delay={0.15}>
-      <PanelHeader
-        icon={<CloudRain className="h-5 w-5" />}
-        title="Rainfall simulation"
-        subtitle="Shape the storm and watch the water respond"
-      />
-
+    <CollapsiblePanel
+      className="w-[360px] max-w-[calc(100vw-2rem)]"
+      delay={0.15}
+      icon={<CloudRain className="h-5 w-5" />}
+      title="Rainfall simulation"
+      subtitle="Shape the storm and run the model"
+      badge={
+        <span className="rounded-full bg-ocean-50 px-2.5 py-1 text-[11px] font-semibold text-ocean-600 ring-1 ring-ocean-100">
+          {intensityLabel}
+        </span>
+      }
+    >
       <div className="scroll-island max-h-[calc(100vh-12rem)] space-y-5 overflow-y-auto px-5 py-4">
         <IntensityPicker value={scenario.intensity} onSelect={setIntensity} />
 
@@ -76,6 +87,6 @@ export function RainfallControlPanel() {
 
         <SimulationActions onRun={rerun} onReset={resetScenario} />
       </div>
-    </Panel>
+    </CollapsiblePanel>
   );
 }

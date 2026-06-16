@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Waves } from "lucide-react";
 
-import { WaveBackground } from "@/components/map/WaveBackground";
+import { SilkBackground } from "@/components/ui/SilkBackground";
 
 const BUBBLES = [
   { left: "18%", size: 10, delay: 0 },
@@ -20,7 +20,7 @@ const BUBBLES = [
 export function LoadingScreen() {
   return (
     <div className="relative flex h-screen w-full flex-col items-center justify-center overflow-hidden">
-      <WaveBackground />
+      <SilkBackground />
 
       {/* Rising bubbles. */}
       {BUBBLES.map((bubble, index) => (
