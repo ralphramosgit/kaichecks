@@ -46,7 +46,9 @@ export function HeatLayer({ predictions, visible }: HeatLayerProps) {
       0.25 + p.unsafeProbability * 0.75,
     ]);
 
-    const layer = L.heatLayer(points, {
+    // `pane` is forwarded to the underlying layer at runtime, but the
+    // leaflet.heat typings omit it, so widen the options type here.
+    const heatOptions: L.HeatMapOptions & { pane?: string } = {
       pane: HEAT_PANE,
       radius: 40,
       blur: 28,
@@ -59,7 +61,8 @@ export function HeatLayer({ predictions, visible }: HeatLayerProps) {
         0.8: "#DD5C3C",
         1.0: "#B23A22",
       },
-    });
+    };
+    const layer = L.heatLayer(points, heatOptions);
 
     layer.addTo(map);
     return () => {

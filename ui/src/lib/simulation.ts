@@ -141,12 +141,21 @@ export function predictBeach(
 /**
  * Run the full island simulation for a scenario and return ranked predictions
  * plus aggregate safety counts for the dashboard panels.
+ *
+ * When `modelSignal` is provided (the unsafe probability from the backend
+ * model), it drives the island-wide pressure used to distribute per-beach
+ * predictions. When omitted, the local rainfall-pressure heuristic is used so
+ * the app still works offline.
  */
-export function runSimulation(scenario: RainfallScenario): SimulationResult {
+export function runSimulation(
+  scenario: RainfallScenario,
+  beaches: Beach[] = BEACHES,
+  modelSignal: number | null = null,
+): SimulationResult {
   const features = buildFeatures(scenario.rainfall7day, scenario.month);
-  const pressure = rainfallPressure(features);
+  const pressure = modelSignal ?? rainfallPressure(features);
 
-  const predictions = BEACHES.map((beach) =>
+  const predictions = beaches.map((beach) =>
     predictBeach(beach, pressure, scenario.month),
   );
 
