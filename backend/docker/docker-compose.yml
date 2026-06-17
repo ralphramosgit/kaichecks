@@ -17,9 +17,22 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Next.js dev server origin so the browser allows cross-origin calls.
+      # Allow the Next.js dev server to call the API.
       KAICHECKS_CORS_ORIGINS: "http://localhost:3000"
-      # AWS (later): models come from S3 instead of being baked into the image.
+
+      # ── AWS (uncomment when ready) ──────────────────────────────────────
+      # Models from S3 instead of baked into the image:
       # KAICHECKS_MODELS_S3_BUCKET: "kaichecks-models"
       # KAICHECKS_MODELS_S3_PREFIX: "models/"
+
+      # GPT key from Secrets Manager instead of plain env var:
+      # KAICHECKS_SECRETS_MANAGER_GPT_ARN: "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT:secret:kaichecks/openai-xxxx"
+
+      # AWS credentials (only needed locally if you want to test S3/Secrets):
+      # AWS_ACCESS_KEY_ID: "YOUR_ACCESS_KEY_ID"
+      # AWS_SECRET_ACCESS_KEY: "YOUR_SECRET_ACCESS_KEY"
+      # AWS_DEFAULT_REGION: "us-east-1"
+
+      # GPT key for local dev (use this instead of Secrets Manager locally):
+      # OPENAI_API_KEY: "sk-..."
     restart: unless-stopped

@@ -15,7 +15,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
-from .ml import build_features, get_bundle, load_models, predict
+from .ml import build_features, get_bundle, load_models, predict, _sync_models_from_s3
 from .schemas import (
     Beach,
     HealthResponse,
@@ -38,7 +38,8 @@ logger.propagate = False
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Load the models once when the server starts so requests are fast.
+    # Pull artifacts from S3 first (no-op in local dev), then load into memory.
+    _sync_models_from_s3()
     load_models()
     yield
 

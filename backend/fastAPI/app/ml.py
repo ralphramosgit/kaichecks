@@ -54,28 +54,36 @@ class ModelBundle:
 _bundle: Optional[ModelBundle] = None
 
 
-# ---------------------------------------------------------------------------
-# AWS (later): fetch model artifacts from S3 at startup rather than baking them
-# into the image. Add boto3 to requirements.txt and set KAICHECKS_MODELS_S3_BUCKET.
-# The Fargate task role needs s3:GetObject on that bucket/prefix.
-# ---------------------------------------------------------------------------
-# import boto3
-#
-# def _sync_models_from_s3() -> None:
-#     settings = get_settings()
-#     bucket = os.environ.get("KAICHECKS_MODELS_S3_BUCKET")
-#     if not bucket:
-#         return  # local dev: use the models already on disk
-#     prefix = os.environ.get("KAICHECKS_MODELS_S3_PREFIX", "models/")
-#     os.makedirs(settings.models_dir, exist_ok=True)
-#     s3 = boto3.client("s3")
-#     for filename in (
-#         settings.metadata_file,
-#         settings.classifier_file,
-#         settings.regressor_file,
-#         settings.beach_catalog_file,
-#     ):
-#         s3.download_file(bucket, f"{prefix}{filename}", settings.path(filename))
+def _sync_models_from_s3() -> None:
+    """Pull model artifacts from S3 when KAICHECKS_MODELS_S3_BUCKET is set.
+
+    No-ops in local dev (bucket not set → models load from disk as normal).
+    On ECS Fargate: set KAICHECKS_MODELS_S3_BUCKET + KAICHECKS_MODELS_S3_PREFIX
+    in the task definition environment variables, and attach a task role with
+    s3:GetObject on the bucket.
+    Requires boto3 in requirements.txt (already included).
+    """
+    settings = get_settings()
+    if not settings.use_s3:
+        return  # local dev — use models already on disk
+
+    import boto3  # type: ignore[import]
+
+    os.makedirs(settings.models_dir, exist_ok=True)
+    s3 = boto3.client("s3", region_name=settings.aws_region)
+    for filename in (
+        settings.metadata_file,
+        settings.classifier_file,
+        settings.regressor_file,
+        settings.beach_catalog_file,
+    ):
+        dest = settings.path(filename)
+        if not os.path.exists(dest):
+            s3.download_file(
+                settings.s3_bucket,
+                f"{settings.s3_prefix}{filename}",
+                dest,
+            )
 
 
 def load_models() -> ModelBundle:
