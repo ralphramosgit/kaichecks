@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Kaimaemae design tokens.
+ * Kaichecks design tokens.
  * Palette: island sand (beige), sage (light green), ocean (light + deep blue),
  * with coral and amber reserved for water-safety status states.
  */

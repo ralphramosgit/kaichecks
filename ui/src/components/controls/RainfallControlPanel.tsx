@@ -5,14 +5,20 @@ import { CloudRain, Droplets } from "lucide-react";
 import { CollapsiblePanel } from "@/components/ui/CollapsiblePanel";
 import { useSimulation } from "@/context/SimulationContext";
 import { INTENSITY_PRESETS } from "@/lib/constants";
-import { rainfallPressure } from "@/lib/simulation";
-import { formatPercent } from "@/lib/utils";
+import { clamp, formatPercent } from "@/lib/utils";
 
 import { IntensityPicker } from "./IntensityPicker";
 import { RainfallDayBars } from "./RainfallDayBars";
 import { MonthSelect } from "./MonthSelect";
 import { RegionFocus } from "./RegionFocus";
 import { SimulationActions } from "./SimulationActions";
+
+/** Heaviest preset's seven-day total, used as the 100% reference for the bar. */
+const SEVERE_WEEK = Math.max(
+  ...Object.values(INTENSITY_PRESETS).map((preset) =>
+    preset.pattern.reduce((sum, mm) => sum + mm, 0),
+  ),
+);
 
 /**
  * Top-left control panel. Collapses to a single row; expands to the storm
@@ -32,7 +38,7 @@ export function RainfallControlPanel() {
     resetScenario,
   } = useSimulation();
 
-  const pressure = rainfallPressure(result.features);
+  const rainfallShare = clamp(result.features.rain7day / SEVERE_WEEK, 0, 1);
   const intensityLabel =
     scenario.intensity === "custom"
       ? "Custom storm"
@@ -77,11 +83,11 @@ export function RainfallControlPanel() {
           <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white">
             <div
               className="h-full rounded-full bg-gradient-to-r from-ocean-300 to-ocean-600 transition-[width] duration-700"
-              style={{ width: `${Math.round(pressure * 100)}%` }}
+              style={{ width: `${Math.round(rainfallShare * 100)}%` }}
             />
           </div>
           <p className="mt-1.5 text-[11px] text-ocean-600/80">
-            Estimated runoff pressure {formatPercent(pressure)} of peak.
+            {formatPercent(rainfallShare)} of a severe storm week.
           </p>
         </div>
 

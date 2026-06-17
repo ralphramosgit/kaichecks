@@ -1,4 +1,4 @@
-# Kaimaemae Machine Learning Overview
+# Kaichecks Machine Learning Overview
 
 This document explains everything the machine learning stage does, using the
 actual columns and the actual logic in the code. It describes the work in

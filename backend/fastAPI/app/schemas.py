@@ -1,4 +1,4 @@
-"""Pydantic request and response schemas for the Kaimaemae API."""
+"""Pydantic request and response schemas for the Kaichecks API."""
 
 from typing import Optional
 

@@ -1,10 +1,10 @@
-# Kaimaemae FastAPI image.
+# Kaichecks FastAPI image.
 #
 # Build context must be the backend/ folder, because the image needs both the
 # FastAPI app (backend/fastAPI) and the trained models (backend/machine_learning/
 # models). Build and run it through docker/docker-compose.yml, or directly with:
 #
-#   docker build -f docker/Dockerfile -t kaimaemae-api:latest .
+#   docker build -f docker/Dockerfile -t kaichecks-api:latest .
 #
 # run from the backend/ folder.
 
@@ -34,8 +34,8 @@ COPY fastAPI/app ./app
 COPY machine_learning/models ./models
 
 # Point the app at the copied models folder. config.py reads this variable.
-ENV KAIMAEMAE_MODELS_DIR=/app/models \
-    KAIMAEMAE_CORS_ORIGINS=*
+ENV KAICHECKS_MODELS_DIR=/app/models \
+    KAICHECKS_CORS_ORIGINS=*
 
 # Run as a non root user, which is good practice and expected on ECS.
 RUN useradd --create-home --uid 10001 appuser \

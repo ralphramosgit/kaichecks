@@ -1,22 +1,15 @@
-import { REGION_LABELS, SAFETY_META } from "@/lib/constants";
-import { firstSafeDay } from "@/lib/forecast";
-import type {
-  BeachPrediction,
-  ForecastDay,
-  RainfallScenario,
-  Region,
-  SimulationResult,
-} from "@/lib/types";
+import { REGION_LABELS } from "@/lib/constants";
+import type { RainfallScenario, Region, SimulationResult } from "@/lib/types";
 import { MONTHS } from "@/lib/constants";
 import { formatPercent } from "@/lib/utils";
 
 /**
- * Deterministic narrative generators.
- *
- * These stand in for the future model-grounded LLM summary. They are written
- * from the same numbers the panels show so the language always matches the
- * data, and they carry no runtime randomness.
+ * Placeholder shown wherever a plain-language summary will go once a GPT API
+ * key is connected. Until then we surface only real model numbers, never
+ * generated prose dressed up as analysis.
  */
+export const AI_SUMMARY_PLACEHOLDER =
+  "Connect a GPT API key to generate a plain-language summary. The figures shown are live model output.";
 
 /** A short, human-readable storm descriptor for the active scenario. */
 function scenarioPhrase(
@@ -30,43 +23,6 @@ function scenarioPhrase(
   if (total < 60) return `a moderately wet stretch in ${month}`;
   if (total < 120) return `heavy rainfall in ${month}`;
   return `an intense storm system in ${month}`;
-}
-
-/** One-paragraph summary for a single beach detail view. */
-export function summarizeBeach(
-  prediction: BeachPrediction,
-  forecast: ForecastDay[],
-  scenario: RainfallScenario,
-): string {
-  const { beach, unsafeProbability, predictedEnterococcus, safetyLevel } =
-    prediction;
-  const verdict = SAFETY_META[safetyLevel].label.toLowerCase();
-  const month = MONTHS[scenario.month - 1];
-  const recovery = firstSafeDay(forecast);
-
-  const lead =
-    safetyLevel === "unsafe"
-      ? `Under the simulated rainfall, ${beach.name} is predicted to be ${verdict} for swimming.`
-      : safetyLevel === "caution"
-        ? `${beach.name} sits near the safety threshold under this scenario, so use caution.`
-        : `${beach.name} is predicted to stay ${verdict} under this scenario.`;
-
-  const numbers = `The model estimates a ${formatPercent(
-    unsafeProbability,
-  )} chance of exceeding the action level, with enterococcus around ${predictedEnterococcus} CFU per 100 mL.`;
-
-  const history = `Historically, ${formatPercent(
-    beach.exceedanceRate,
-  )} of ${beach.samples.toLocaleString()} samples here exceeded the standard.`;
-
-  const recoveryNote =
-    safetyLevel === "safe"
-      ? `Conditions look favorable through the ${month} outlook.`
-      : recovery
-        ? `Water quality is projected to return to safe levels around ${recovery.label === "Today" ? "today" : recovery.label}.`
-        : `Levels stay elevated across the seven-day outlook, so monitor before entering the water.`;
-
-  return `${lead} ${numbers} ${history} ${recoveryNote}`;
 }
 
 export interface Finding {
@@ -99,7 +55,7 @@ export function generateFindings(
       title: `${worst.beach.name} shows the highest risk`,
       detail: `Predicted ${formatPercent(
         worst.unsafeProbability,
-      )} exceedance probability, about ${worst.predictedEnterococcus} CFU per 100 mL.`,
+      )} chance of exceeding the swimming standard under the current rainfall.`,
       tone: "unsafe",
     });
   }
@@ -148,15 +104,4 @@ export function generateFindings(
   }
 
   return findings;
-}
-
-/** Short headline used by the results panel summary banner. */
-export function summarizeIsland(
-  result: SimulationResult,
-  scenario: RainfallScenario,
-): string {
-  const phrase = scenarioPhrase(scenario, result);
-  return `Under ${phrase}, average island exceedance probability is ${formatPercent(
-    result.averageProbability,
-  )}. ${result.safeCount} beaches stay safe, ${result.cautionCount} warrant caution, and ${result.unsafeCount} are unsafe.`;
 }

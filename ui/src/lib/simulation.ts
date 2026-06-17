@@ -1,5 +1,4 @@
-import { BEACHES } from "@/lib/beaches";
-import { BAV_THRESHOLD, SAFETY_THRESHOLDS } from "@/lib/constants";
+import { SAFETY_THRESHOLDS } from "@/lib/constants";
 import type {
   Beach,
   BeachPrediction,
@@ -8,12 +7,7 @@ import type {
   SafetyLevel,
   SimulationResult,
 } from "@/lib/types";
-import { clamp, round, seededUnit } from "@/lib/utils";
-
-/** Standard logistic function. */
-function sigmoid(x: number): number {
-  return 1 / (1 + Math.exp(-x));
-}
+import { clamp, round } from "@/lib/utils";
 
 /**
  * Build the seven engineered antecedent-rainfall features from a daily series.
@@ -58,29 +52,6 @@ export function buildFeatures(
   };
 }
 
-/**
- * Collapse the rainfall features into a single 0..1 "pressure" scalar that
- * weights the most recent rainfall most heavily, since enterococcus loads from
- * runoff wash out within a few days.
- */
-export function rainfallPressure(features: RainfallFeatures): number {
-  const { rain24hr, rain48hr, rain72hr, rain7day, daysSinceRain } = features;
-  const priorDay = Math.max(0, rain48hr - rain24hr);
-  const thirdDay = Math.max(0, rain72hr - rain48hr);
-  const older = Math.max(0, rain7day - rain72hr);
-
-  const weighted =
-    1.0 * rain24hr + 0.8 * priorDay + 0.6 * thirdDay + 0.3 * older;
-  const damped = weighted * Math.max(0, 1 - 0.06 * daysSinceRain);
-
-  return clamp(sigmoid((damped - 38) / 16), 0, 1);
-}
-
-/** Returns true when the month falls in Oahu's wetter season. */
-function isWetSeason(month: number): boolean {
-  return month >= 11 || month <= 4;
-}
-
 /** Map a predicted unsafe probability to a discrete safety verdict. */
 export function safetyFromProbability(probability: number): SafetyLevel {
   if (probability >= SAFETY_THRESHOLDS.unsafe) return "unsafe";
@@ -89,52 +60,73 @@ export function safetyFromProbability(probability: number): SafetyLevel {
 }
 
 /**
- * How strongly a given beach reacts to rainfall. Higher historical exceedance
- * (often stream and canal mouths) reacts more; a small deterministic per-beach
- * factor adds believable variation without runtime randomness.
+ * Strength of the island-average prior when smoothing a beach's historical
+ * exceedance rate, expressed in equivalent samples. A beach needs roughly this
+ * many of its own samples before its raw rate outweighs the island average.
+ * This stops a beach with a handful of clean samples from reading a hard 0%
+ * (or one unlucky sample from reading alarmingly high).
  */
-function beachSensitivity(beach: Beach): number {
-  const base = 0.35 + 1.2 * beach.exceedanceRate;
-  const variation = 0.4 * seededUnit(`${beach.locationId}-sens`);
-  return clamp(base + variation, 0.3, 1.35);
-}
+export const EXCEEDANCE_PRIOR_STRENGTH = 30;
 
-/** Convert an unsafe probability into an estimated enterococcus count. */
-export function probabilityToEnterococcus(probability: number): number {
-  return round(BAV_THRESHOLD * Math.exp(5 * (probability - 0.5)));
+/** Below this sample count a beach's history is flagged as limited data. */
+export const MIN_RELIABLE_SAMPLES = 30;
+
+/**
+ * Shrink a beach's raw historical exceedance rate toward the island average
+ * using Laplace / empirical-Bayes smoothing. Well-sampled beaches barely move;
+ * sparse beaches regress toward the island norm instead of claiming a confident
+ * 0% or spiking on a single sample.
+ */
+export function smoothedExceedance(
+  beach: Beach,
+  islandMeanExceedance: number,
+): number {
+  const exceedances = beach.samples * beach.exceedanceRate;
+  return (
+    (exceedances + EXCEEDANCE_PRIOR_STRENGTH * islandMeanExceedance) /
+    (beach.samples + EXCEEDANCE_PRIOR_STRENGTH)
+  );
 }
 
 /**
- * Predict the unsafe probability for one beach under a rainfall pressure and
- * month. Exposed so the forecast can reuse the same response curve.
+ * Scale the island-wide model probability to one beach using that beach's real
+ * historical exceedance rate as a relative-risk multiplier on the odds. The
+ * only inputs are the model output and the historical data, so there is no
+ * fabricated math and no runtime randomness.
  */
-export function predictProbability(
-  beach: Beach,
-  pressure: number,
-  month: number,
+export function scaleProbabilityToBeach(
+  islandProbability: number,
+  beachExceedance: number,
+  meanExceedance: number,
 ): number {
-  const baseline = beach.exceedanceRate;
-  const sensitivity = beachSensitivity(beach);
-  const seasonal = isWetSeason(month) ? 1.08 : 1;
-  const jitter = (seededUnit(`${beach.locationId}-jit`) - 0.5) * 0.05;
+  const p = clamp(islandProbability, 0, 1);
+  if (p <= 0 || p >= 1 || meanExceedance <= 0) return p;
 
-  const lift = (1 - baseline) * sensitivity * clamp(pressure * seasonal, 0, 1);
-  return clamp(baseline + lift + jitter, 0.005, 0.985);
+  // Relative risk from history: how this beach compares to the island average.
+  // Applied to the odds so the scaled probability always stays within (0, 1).
+  const relativeRisk = beachExceedance / meanExceedance;
+  const odds = (p / (1 - p)) * relativeRisk;
+  return odds / (1 + odds);
 }
 
-/** Produce a full prediction record for one beach. */
+/** Produce a prediction record for one beach from the island model signal. */
 export function predictBeach(
   beach: Beach,
-  pressure: number,
-  month: number,
+  islandProbability: number,
+  meanExceedance: number,
 ): BeachPrediction {
-  const probability = predictProbability(beach, pressure, month);
+  const smoothed = smoothedExceedance(beach, meanExceedance);
+  const probability = scaleProbabilityToBeach(
+    islandProbability,
+    smoothed,
+    meanExceedance,
+  );
   return {
     beach,
     unsafeProbability: probability,
     safetyLevel: safetyFromProbability(probability),
-    predictedEnterococcus: probabilityToEnterococcus(probability),
     delta: probability - beach.exceedanceRate,
+    limitedData: beach.samples < MIN_RELIABLE_SAMPLES,
   };
 }
 
@@ -142,21 +134,22 @@ export function predictBeach(
  * Run the full island simulation for a scenario and return ranked predictions
  * plus aggregate safety counts for the dashboard panels.
  *
- * When `modelSignal` is provided (the unsafe probability from the backend
- * model), it drives the island-wide pressure used to distribute per-beach
- * predictions. When omitted, the local rainfall-pressure heuristic is used so
- * the app still works offline.
+ * `islandProbability` is the unsafe probability returned by the backend model
+ * for this scenario. It is scaled to each beach using that beach's real
+ * historical exceedance rate; nothing here is mocked or randomized.
  */
 export function runSimulation(
   scenario: RainfallScenario,
-  beaches: Beach[] = BEACHES,
-  modelSignal: number | null = null,
+  beaches: Beach[],
+  islandProbability: number,
 ): SimulationResult {
   const features = buildFeatures(scenario.rainfall7day, scenario.month);
-  const pressure = modelSignal ?? rainfallPressure(features);
+  const meanExceedance =
+    beaches.reduce((sum, beach) => sum + beach.exceedanceRate, 0) /
+    beaches.length;
 
   const predictions = beaches.map((beach) =>
-    predictBeach(beach, pressure, scenario.month),
+    predictBeach(beach, islandProbability, meanExceedance),
   );
 
   const byProbabilityDesc = [...predictions].sort(

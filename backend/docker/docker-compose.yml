@@ -1,4 +1,4 @@
-# Local testing for the Kaimaemae API container.
+# Local testing for the Kaichecks API container.
 #
 # Run from the backend/docker/ folder:
 #   docker compose up --build
@@ -12,12 +12,14 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: kaimaemae-api:latest
-    container_name: kaimaemae-api
+    image: kaichecks-api:latest
+    container_name: kaichecks-api
     ports:
       - "8000:8000"
     environment:
-      # Override CORS origins here when wiring up the frontend, e.g.
-      # KAIMAEMAE_CORS_ORIGINS: "http://localhost:5173"
-      KAIMAEMAE_CORS_ORIGINS: "*"
+      # Next.js dev server origin so the browser allows cross-origin calls.
+      KAICHECKS_CORS_ORIGINS: "http://localhost:3000"
+      # AWS (later): models come from S3 instead of being baked into the image.
+      # KAICHECKS_MODELS_S3_BUCKET: "kaichecks-models"
+      # KAICHECKS_MODELS_S3_PREFIX: "models/"
     restart: unless-stopped

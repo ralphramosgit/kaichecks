@@ -22,7 +22,7 @@ export function AppHeader({ onRestart }: { onRestart: () => void }) {
         </span>
         <div className="leading-tight">
           <div className="text-sm font-bold tracking-tight text-ocean-800">
-            Kaimaemae
+            Kaichecks
           </div>
           <div className="text-[10px] font-medium uppercase tracking-wide text-ocean-500">
             Beach water safety

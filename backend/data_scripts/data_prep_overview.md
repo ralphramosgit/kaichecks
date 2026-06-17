@@ -1,4 +1,4 @@
-# Kaimaemae Data Preparation Overview
+# Kaichecks Data Preparation Overview
 
 This document explains the data pipeline that runs before the machine learning
 stage: how the raw files were combined, what was removed during cleaning, what was

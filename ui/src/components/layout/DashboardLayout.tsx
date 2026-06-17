@@ -2,11 +2,14 @@
 
 import { SafetyListPanel } from "@/components/beaches/SafetyListPanel";
 import { RainfallControlPanel } from "@/components/controls/RainfallControlPanel";
+import { LoadingScreen } from "@/components/loading/LoadingScreen";
 import { BeachDetailModal } from "@/components/modal/BeachDetailModal";
 import { MapStage } from "@/components/map/MapStage";
 import { DataResultsPanel } from "@/components/results/DataResultsPanel";
+import { useSimulation } from "@/context/SimulationContext";
 
 import { AppHeader } from "./AppHeader";
+import { DashboardError } from "./DashboardError";
 
 /**
  * Dashboard composition: the Oahu map fills the stage as a living backdrop with
@@ -15,6 +18,17 @@ import { AppHeader } from "./AppHeader";
  * modal mounts above everything.
  */
 export function DashboardLayout({ onRestart }: { onRestart: () => void }) {
+  const { apiStatus, result, retry } = useSimulation();
+
+  // No mock fallback: surface backend failures, and hold the loading screen
+  // until the first real result lands.
+  if (apiStatus === "error") {
+    return <DashboardError onRetry={retry} onRestart={onRestart} />;
+  }
+  if (result.predictions.length === 0) {
+    return <LoadingScreen />;
+  }
+
   return (
     <div className="relative h-screen w-full overflow-hidden">
       {/* Living map backdrop. `isolate` keeps the pins' z-indices scoped to

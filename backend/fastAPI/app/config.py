@@ -1,4 +1,4 @@
-"""Application configuration for the Kaimaemae API.
+"""Application configuration for the Kaichecks API.
 
 All settings can be overridden with environment variables, which keeps the app
 container friendly for the later Docker step. The defaults resolve the model
@@ -25,7 +25,7 @@ class Settings:
 
     def __init__(self) -> None:
         self.models_dir: str = os.environ.get(
-            "KAIMAEMAE_MODELS_DIR", _DEFAULT_MODELS_DIR
+            "KAICHECKS_MODELS_DIR", _DEFAULT_MODELS_DIR
         )
         self.metadata_file: str = "model_metadata.json"
         self.classifier_file: str = "xgb_classifier.json"
@@ -34,8 +34,14 @@ class Settings:
 
         # Comma separated list of allowed CORS origins for the frontend.
         # Defaults to a permissive value for local development.
-        origins = os.environ.get("KAIMAEMAE_CORS_ORIGINS", "*")
+        origins = os.environ.get("KAICHECKS_CORS_ORIGINS", "*")
         self.cors_origins: list[str] = [o.strip() for o in origins.split(",")]
+
+        # AWS (later): pull artifacts from S3 instead of the local/baked folder.
+        # self.models_s3_bucket = os.environ.get("KAICHECKS_MODELS_S3_BUCKET")
+        # self.models_s3_prefix = os.environ.get(
+        #     "KAICHECKS_MODELS_S3_PREFIX", "models/"
+        # )
 
     def path(self, filename: str) -> str:
         return os.path.join(self.models_dir, filename)

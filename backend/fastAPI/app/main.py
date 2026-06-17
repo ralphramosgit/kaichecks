@@ -1,4 +1,4 @@
-"""Kaimaemae FastAPI application.
+"""Kaichecks FastAPI application.
 
 Loads the trained models at startup and exposes endpoints the frontend uses to
 simulate rainfall scenarios and explore Oahu beaches. The model is the XGBoost
@@ -6,6 +6,8 @@ classifier chosen during training, with the regressor providing a secondary
 continuous risk estimate.
 """
 
+import logging
+import sys
 from contextlib import asynccontextmanager
 
 import pandas as pd
@@ -21,6 +23,18 @@ from .schemas import (
     ScenarioRequest,
 )
 
+# Dedicated logger that always writes to stdout, so the real request inputs and
+# model outputs appear in `docker compose up` / `docker logs`. This lets you
+# confirm every number on the site comes from a live API response, not from any
+# hardcoded or fallback data.
+logger = logging.getLogger("kaichecks")
+if not logger.handlers:
+    _handler = logging.StreamHandler(sys.stdout)
+    _handler.setFormatter(logging.Formatter("%(levelname)s:     [kaichecks] %(message)s"))
+    logger.addHandler(_handler)
+logger.setLevel(logging.INFO)
+logger.propagate = False
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,7 +44,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Kaimaemae API",
+    title="Kaichecks API",
     description=(
         "Predicts whether an Oahu beach is unsafe for swimming based on "
         "antecedent rainfall."
@@ -68,7 +82,7 @@ def health() -> HealthResponse:
 def root() -> dict:
     """Friendly landing payload pointing at the docs."""
     return {
-        "name": "Kaimaemae API",
+        "name": "Kaichecks API",
         "docs": "/docs",
         "endpoints": ["/health", "/predict", "/beaches", "/metadata"],
     }
@@ -85,7 +99,21 @@ def predict_scenario(request: ScenarioRequest) -> PredictionResponse:
     """Score a rainfall scenario and return the beach safety prediction."""
     features = build_features(request.rainfall_7day, request.month)
     result = predict(features)
-    return PredictionResponse(**result)
+    response = PredictionResponse(**result)
+    logger.info(
+        "POST /predict  IN : month=%s rain_7day=%s",
+        request.month,
+        request.rainfall_7day,
+    )
+    logger.info(
+        "POST /predict  OUT: unsafe_probability=%.4f unsafe=%s "
+        "predicted_enterococcus_cfu=%.1f bav_threshold=%s",
+        response.unsafe_probability,
+        response.unsafe,
+        response.predicted_enterococcus_cfu,
+        response.bav_threshold,
+    )
+    return response
 
 
 @app.get("/beaches", response_model=list[Beach])
@@ -113,4 +141,13 @@ def beaches() -> list[Beach]:
                 nearest_station_id=None if pd.isna(station) else str(station),
             )
         )
+    logger.info(
+        "GET /beaches  OUT: %d beaches served from the live catalog "
+        "(e.g. %r samples=%s exceedance_rate=%.4f station=%s)",
+        len(result),
+        result[0].location_name,
+        result[0].samples,
+        result[0].exceedance_rate,
+        result[0].nearest_station_id,
+    )
     return result

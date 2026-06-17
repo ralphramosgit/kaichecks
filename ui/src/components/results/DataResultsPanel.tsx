@@ -6,7 +6,7 @@ import { BarChart3, Sparkles } from "lucide-react";
 import { CollapsiblePanel } from "@/components/ui/CollapsiblePanel";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { useSimulation } from "@/context/SimulationContext";
-import { generateFindings, summarizeIsland } from "@/lib/insights";
+import { AI_SUMMARY_PLACEHOLDER, generateFindings } from "@/lib/insights";
 import { formatPercent } from "@/lib/utils";
 
 import { StatGrid } from "./StatGrid";
@@ -30,10 +30,6 @@ export function DataResultsPanel() {
   const { result, scenario } = useSimulation();
   const [chartView, setChartView] = useState<ChartView>("distribution");
 
-  const summary = useMemo(
-    () => summarizeIsland(result, scenario),
-    [result, scenario],
-  );
   const findings = useMemo(
     () => generateFindings(result, scenario),
     [result, scenario],
@@ -61,7 +57,9 @@ export function DataResultsPanel() {
               AI summary
             </span>
           </div>
-          <p className="text-xs leading-relaxed text-ocean-700">{summary}</p>
+          <p className="text-xs leading-relaxed text-ocean-700">
+            {AI_SUMMARY_PLACEHOLDER}
+          </p>
         </div>
 
         <StatGrid result={result} />

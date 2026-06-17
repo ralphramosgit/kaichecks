@@ -1,18 +1,17 @@
 "use client";
 
-import { Droplet } from "lucide-react";
+import { Info } from "lucide-react";
 
 import { ProbabilityBar } from "@/components/ui/ProbabilityBar";
 import { SafetyBadge } from "@/components/ui/SafetyBadge";
-import { BAV_THRESHOLD, SAFETY_META } from "@/lib/constants";
+import { SAFETY_META } from "@/lib/constants";
 import type { BeachPrediction } from "@/lib/types";
 import { formatPercent } from "@/lib/utils";
 
 /** Prominent safety verdict block for the beach modal header. */
 export function SafetyVerdict({ prediction }: { prediction: BeachPrediction }) {
-  const { unsafeProbability, predictedEnterococcus, safetyLevel } = prediction;
+  const { unsafeProbability, safetyLevel, limitedData } = prediction;
   const meta = SAFETY_META[safetyLevel];
-  const overLimit = predictedEnterococcus > BAV_THRESHOLD;
 
   return (
     <div
@@ -46,21 +45,13 @@ export function SafetyVerdict({ prediction }: { prediction: BeachPrediction }) {
         <ProbabilityBar probability={unsafeProbability} level={safetyLevel} />
       </div>
 
-      <div className="mt-3 flex items-center gap-2 text-sm">
-        <Droplet className="h-4 w-4 text-ocean-500" />
-        <span className="font-semibold text-ocean-800">
-          {predictedEnterococcus} CFU / 100 mL
-        </span>
-        <span
-          className="ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold"
-          style={{
-            backgroundColor: overLimit ? "#FBE0D8" : "#DDEBD3",
-            color: overLimit ? "#C2462A" : "#497336",
-          }}
-        >
-          {overLimit ? "Over" : "Under"} limit of {BAV_THRESHOLD}
-        </span>
-      </div>
+      {limitedData ? (
+        <p className="mt-3 flex items-start gap-1.5 text-[11px] leading-snug text-ocean-500">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-caution-500" />
+          This beach has few historical samples, so its rate is pulled toward
+          the island average and should be read as low confidence.
+        </p>
+      ) : null}
     </div>
   );
 }

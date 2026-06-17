@@ -4,7 +4,7 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Navigation } from "lucide-react";
 
-import { SilkBackground } from "@/components/ui/SilkBackground";
+import { BackgroundShader } from "@/components/ui/background-shader";
 import { WaveSpinner } from "@/components/ui/WaveSpinner";
 
 import { MapLegend } from "./MapLegend";
@@ -28,7 +28,7 @@ export function MapStage() {
 
   return (
     <div className="absolute inset-0 overflow-hidden">
-      <SilkBackground />
+      <BackgroundShader />
 
       <div className="absolute inset-0">
         <OahuMap heatmapVisible={heatmapVisible} />

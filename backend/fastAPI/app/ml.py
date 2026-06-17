@@ -1,4 +1,4 @@
-"""Model loading and prediction logic for the Kaimaemae API.
+"""Model loading and prediction logic for the Kaichecks API.
 
 This module loads the trained artifacts once at startup and exposes helpers to
 turn a rainfall scenario into the engineered features the models expect, then
@@ -54,10 +54,35 @@ class ModelBundle:
 _bundle: Optional[ModelBundle] = None
 
 
+# ---------------------------------------------------------------------------
+# AWS (later): fetch model artifacts from S3 at startup rather than baking them
+# into the image. Add boto3 to requirements.txt and set KAICHECKS_MODELS_S3_BUCKET.
+# The Fargate task role needs s3:GetObject on that bucket/prefix.
+# ---------------------------------------------------------------------------
+# import boto3
+#
+# def _sync_models_from_s3() -> None:
+#     settings = get_settings()
+#     bucket = os.environ.get("KAICHECKS_MODELS_S3_BUCKET")
+#     if not bucket:
+#         return  # local dev: use the models already on disk
+#     prefix = os.environ.get("KAICHECKS_MODELS_S3_PREFIX", "models/")
+#     os.makedirs(settings.models_dir, exist_ok=True)
+#     s3 = boto3.client("s3")
+#     for filename in (
+#         settings.metadata_file,
+#         settings.classifier_file,
+#         settings.regressor_file,
+#         settings.beach_catalog_file,
+#     ):
+#         s3.download_file(bucket, f"{prefix}{filename}", settings.path(filename))
+
+
 def load_models() -> ModelBundle:
     """Load the model bundle into the module level cache. Called at startup."""
     global _bundle
     if _bundle is None:
+        # _sync_models_from_s3()  # AWS (later): hydrate models from S3 first
         _bundle = ModelBundle()
     return _bundle
 

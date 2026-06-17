@@ -22,20 +22,6 @@ export function round(value: number, decimals = 0): number {
   return Math.round(value * factor) / factor;
 }
 
-/**
- * Deterministic 0..1 pseudo-random value from a string seed.
- * Used so per-beach variation stays stable between server and client renders.
- */
-export function seededUnit(seed: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i += 1) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  // Map the 32-bit hash into a 0..1 float.
-  return ((h >>> 0) % 100000) / 100000;
-}
-
 /** Format a 0..1 ratio as a whole-number percentage string. */
 export function formatPercent(value: number, decimals = 0): string {
   return `${(value * 100).toFixed(decimals)}%`;

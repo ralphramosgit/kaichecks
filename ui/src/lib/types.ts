@@ -1,4 +1,4 @@
-/** Shared domain types for the Kaimaemae frontend. */
+/** Shared domain types for the Kaichecks frontend. */
 
 /** A monitored Oahu beach location with historical context. */
 export interface Beach {
@@ -46,23 +46,19 @@ export interface RainfallScenario {
 
 export type StormIntensity = "dry" | "light" | "moderate" | "heavy" | "storm";
 
-/** A single beach prediction produced by the (mock) model. */
+/**
+ * A single beach prediction. The unsafe probability is the backend model's
+ * island-wide output scaled to this beach by its real historical exceedance
+ * rate; nothing here is mocked.
+ */
 export interface BeachPrediction {
   beach: Beach;
   unsafeProbability: number;
   safetyLevel: SafetyLevel;
-  predictedEnterococcus: number;
-  /** Change in probability versus the beach baseline (-1..1). */
+  /** Change in probability versus the beach's historical exceedance (-1..1). */
   delta: number;
-}
-
-/** One day of the forward water-quality forecast. */
-export interface ForecastDay {
-  dayOffset: number;
-  label: string;
-  unsafeProbability: number;
-  predictedEnterococcus: number;
-  safetyLevel: SafetyLevel;
+  /** True when the beach has too few historical samples to be reliable. */
+  limitedData: boolean;
 }
 
 /** Aggregate results for the whole island under the active scenario. */

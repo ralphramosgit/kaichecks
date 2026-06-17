@@ -11,14 +11,11 @@ import {
 } from "react";
 
 import { fetchBeaches, predictScenario } from "@/lib/api";
-import { BEACHES } from "@/lib/beaches";
 import { INTENSITY_PRESETS } from "@/lib/constants";
-import { generateForecast } from "@/lib/forecast";
-import { runSimulation } from "@/lib/simulation";
+import { buildFeatures, runSimulation } from "@/lib/simulation";
 import type {
   Beach,
   BeachPrediction,
-  ForecastDay,
   RainfallScenario,
   Region,
   SimulationResult,
@@ -26,19 +23,23 @@ import type {
 } from "@/lib/types";
 import { clamp } from "@/lib/utils";
 
-/** Whether the live backend model is driving results, or the local fallback. */
-export type ApiStatus = "local" | "loading" | "live" | "error";
+/**
+ * Backend connection state. The app never falls back to mock data: until the
+ * model responds we are "loading", and any failure surfaces as "error".
+ */
+export type ApiStatus = "loading" | "ready" | "error";
 
 interface SimulationContextValue {
   scenario: RainfallScenario;
   result: SimulationResult;
   /** Increments each time a fresh run is committed; drives panel re-animation. */
   runId: number;
-  /** Whether the live backend model is driving results, or the local fallback. */
+  /** Backend connection state; drives the loading and error screens. */
   apiStatus: ApiStatus;
+  /** Number of beaches in the live backend catalog (0 until it loads). */
+  beachCount: number;
   selectedBeachId: string | null;
   selectedPrediction: BeachPrediction | null;
-  selectedForecast: ForecastDay[] | null;
   hoveredBeachId: string | null;
   setIntensity: (intensity: StormIntensity) => void;
   setMonth: (month: number) => void;
@@ -48,6 +49,8 @@ interface SimulationContextValue {
   hoverBeach: (beachId: string | null) => void;
   resetScenario: () => void;
   rerun: () => void;
+  /** Re-attempt the backend calls after an error. */
+  retry: () => void;
 }
 
 const DEFAULT_SCENARIO: RainfallScenario = {
@@ -57,35 +60,55 @@ const DEFAULT_SCENARIO: RainfallScenario = {
   intensity: "moderate",
 };
 
+/**
+ * Empty placeholder result used only before the first backend response. It is
+ * never rendered: the dashboard shows the loading screen until real data
+ * arrives, so no fabricated numbers ever reach the UI.
+ */
+const EMPTY_RESULT: SimulationResult = {
+  predictions: [],
+  unsafeCount: 0,
+  cautionCount: 0,
+  safeCount: 0,
+  averageProbability: 0,
+  features: buildFeatures(
+    DEFAULT_SCENARIO.rainfall7day,
+    DEFAULT_SCENARIO.month,
+  ),
+  mostUnsafe: [],
+  mostSafe: [],
+};
+
 const SimulationContext = createContext<SimulationContextValue | null>(null);
 
 export function SimulationProvider({ children }: { children: ReactNode }) {
   const [scenario, setScenario] = useState<RainfallScenario>(DEFAULT_SCENARIO);
-  const [beaches, setBeaches] = useState<Beach[]>(BEACHES);
-  const [result, setResult] = useState<SimulationResult>(() =>
-    runSimulation(DEFAULT_SCENARIO),
-  );
-  const [apiStatus, setApiStatus] = useState<ApiStatus>("local");
+  const [beaches, setBeaches] = useState<Beach[]>([]);
+  const [result, setResult] = useState<SimulationResult>(EMPTY_RESULT);
+  const [apiStatus, setApiStatus] = useState<ApiStatus>("loading");
   const [selectedBeachId, setSelectedBeachId] = useState<string | null>(null);
   const [hoveredBeachId, setHoveredBeachId] = useState<string | null>(null);
   const [runId, setRunId] = useState(0);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  // Load the real beach catalog from the backend once. Silently keeps the
-  // bundled catalog if the API is unreachable.
+  // Load the real beach catalog from the backend. There is no bundled fallback:
+  // if the API is unreachable the dashboard shows an error instead of mock data.
   useEffect(() => {
     const controller = new AbortController();
     fetchBeaches(controller.signal)
-      .then((live) => {
-        if (live.length) setBeaches(live);
-      })
-      .catch(() => {});
+      .then((live) => setBeaches(live))
+      .catch(() => {
+        if (!controller.signal.aborted) setApiStatus("error");
+      });
     return () => controller.abort();
-  }, []);
+  }, [reloadKey]);
 
-  // Recompute on every scenario or catalog change. The backend model supplies
-  // the island signal; on any failure we fall back to the local mock model so
-  // the app keeps working offline.
+  // Run the model on every scenario or catalog change. The backend supplies the
+  // island probability; any failure surfaces as an error with no fabricated
+  // fallback. The previous real result stays visible while a new one loads.
   useEffect(() => {
+    if (beaches.length === 0) return;
+
     const controller = new AbortController();
     setApiStatus("loading");
 
@@ -94,16 +117,14 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
         setResult(
           runSimulation(scenario, beaches, prediction.unsafeProbability),
         );
-        setApiStatus("live");
+        setApiStatus("ready");
       })
       .catch(() => {
-        if (controller.signal.aborted) return;
-        setResult(runSimulation(scenario, beaches));
-        setApiStatus("error");
+        if (!controller.signal.aborted) setApiStatus("error");
       });
 
     return () => controller.abort();
-  }, [scenario, beaches]);
+  }, [scenario, beaches, reloadKey]);
 
   const setIntensity = useCallback((intensity: StormIntensity) => {
     setScenario((prev) => ({
@@ -155,6 +176,11 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     setRunId((id) => id + 1);
   }, []);
 
+  const retry = useCallback(() => {
+    setApiStatus("loading");
+    setReloadKey((key) => key + 1);
+  }, []);
+
   const selectedPrediction = useMemo(
     () =>
       selectedBeachId
@@ -165,23 +191,15 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     [result.predictions, selectedBeachId],
   );
 
-  const selectedForecast = useMemo(
-    () =>
-      selectedPrediction
-        ? generateForecast(selectedPrediction.beach, scenario)
-        : null,
-    [selectedPrediction, scenario],
-  );
-
   const value = useMemo<SimulationContextValue>(
     () => ({
       scenario,
       result,
       runId,
       apiStatus,
+      beachCount: beaches.length,
       selectedBeachId,
       selectedPrediction,
-      selectedForecast,
       hoveredBeachId,
       setIntensity,
       setMonth,
@@ -191,15 +209,16 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       hoverBeach,
       resetScenario,
       rerun,
+      retry,
     }),
     [
       scenario,
       result,
       runId,
       apiStatus,
+      beaches.length,
       selectedBeachId,
       selectedPrediction,
-      selectedForecast,
       hoveredBeachId,
       setIntensity,
       setMonth,
@@ -209,6 +228,7 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
       hoverBeach,
       resetScenario,
       rerun,
+      retry,
     ],
   );
 

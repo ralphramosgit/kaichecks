@@ -1,39 +1,27 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { CalendarRange, MapPin, RefreshCw, X } from "lucide-react";
+import { MapPin, RefreshCw, X } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
-import { SafetyDot } from "@/components/ui/SafetyBadge";
 import { useSimulation } from "@/context/SimulationContext";
 import { REGION_LABELS } from "@/lib/constants";
-import { summarizeBeach } from "@/lib/insights";
-import { formatPercent } from "@/lib/utils";
+import { AI_SUMMARY_PLACEHOLDER } from "@/lib/insights";
 
 import { SafetyVerdict } from "./SafetyVerdict";
-import { ForecastTimeline } from "./ForecastTimeline";
 import { BeachSummary } from "./BeachSummary";
 import { BeachStats } from "./BeachStats";
 
 /**
- * Detail modal for a selected beach: the safety verdict, a seven-day forecast,
- * a generated summary, historical stats, and a path to a new simulation.
+ * Detail modal for a selected beach: the safety verdict, an AI summary
+ * placeholder, historical stats, and a path to a new simulation.
  */
 export function BeachDetailModal() {
-  const { selectedPrediction, selectedForecast, scenario, selectBeach, rerun } =
-    useSimulation();
+  const { selectedPrediction, selectBeach, rerun } = useSimulation();
 
-  const open = Boolean(selectedPrediction && selectedForecast);
-
-  const summary = useMemo(
-    () =>
-      selectedPrediction && selectedForecast
-        ? summarizeBeach(selectedPrediction, selectedForecast, scenario)
-        : "",
-    [selectedPrediction, selectedForecast, scenario],
-  );
+  const open = Boolean(selectedPrediction);
 
   // Close on Escape while the modal is open.
   useEffect(() => {
@@ -47,7 +35,7 @@ export function BeachDetailModal() {
 
   return (
     <AnimatePresence>
-      {open && selectedPrediction && selectedForecast ? (
+      {open && selectedPrediction ? (
         <motion.div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           initial={{ opacity: 0 }}
@@ -94,32 +82,7 @@ export function BeachDetailModal() {
             <div className="space-y-4 px-5 py-4">
               <SafetyVerdict prediction={selectedPrediction} />
 
-              {/* Forecast. */}
-              <div>
-                <h3 className="mb-1 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-ocean-500">
-                  <CalendarRange className="h-3.5 w-3.5" />
-                  Seven-day water-quality outlook
-                </h3>
-                <ForecastTimeline forecast={selectedForecast} />
-                <div className="mt-2 flex justify-between gap-1">
-                  {selectedForecast.map((day) => (
-                    <div
-                      key={day.dayOffset}
-                      className="flex flex-1 flex-col items-center gap-1 rounded-lg bg-ocean-50/60 py-1.5"
-                    >
-                      <span className="text-[10px] font-medium text-ocean-500">
-                        {day.label}
-                      </span>
-                      <SafetyDot level={day.safetyLevel} />
-                      <span className="text-[10px] font-bold tabular-nums text-ocean-700">
-                        {formatPercent(day.unsafeProbability)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <BeachSummary summary={summary} />
+              <BeachSummary summary={AI_SUMMARY_PLACEHOLDER} />
 
               <BeachStats beach={selectedPrediction.beach} />
             </div>

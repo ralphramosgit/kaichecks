@@ -45,6 +45,9 @@ export function MonthSelect({ month, onChange }: MonthSelectProps) {
       >
         {wet ? "Wet season" : "Dry season"}
       </span>
+      <p className="mt-1 text-[10px] leading-snug text-ocean-500/70">
+        Minor seasonal adjustment. Rainfall amount drives the result.
+      </p>
     </div>
   );
 }

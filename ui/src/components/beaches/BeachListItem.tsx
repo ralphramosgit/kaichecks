@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { Info, TrendingDown, TrendingUp } from "lucide-react";
 
 import { ProbabilityBar } from "@/components/ui/ProbabilityBar";
 import { SafetyDot } from "@/components/ui/SafetyBadge";
@@ -25,7 +25,8 @@ export function BeachListItem({
   onSelect,
   onHover,
 }: BeachListItemProps) {
-  const { beach, unsafeProbability, safetyLevel, delta } = prediction;
+  const { beach, unsafeProbability, safetyLevel, delta, limitedData } =
+    prediction;
   const rising = delta >= 0;
 
   return (
@@ -67,6 +68,12 @@ export function BeachListItem({
           </div>
           <span className="mt-0.5 block text-[11px] text-ocean-500/70">
             {REGION_LABELS[beach.region]}
+            {limitedData ? (
+              <span className="ml-1.5 inline-flex items-center gap-0.5 text-caution-500">
+                <Info className="h-3 w-3" />
+                limited data
+              </span>
+            ) : null}
           </span>
         </div>
 

@@ -14,7 +14,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Kaimaemae | Oahu Beach Water Safety Simulator",
+  title: "Kaichecks | Oahu Beach Water Safety Simulator",
   description:
     "Simulate rainfall across Oahu and explore predicted beach water safety, ranked beaches, forecasts, and findings.",
 };

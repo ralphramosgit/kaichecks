@@ -1,4 +1,4 @@
-# Kaimaemae API
+# Kaichecks API
 
 FastAPI service that predicts whether an Oahu beach is unsafe for swimming based
 on antecedent rainfall. It loads the models trained in
@@ -29,7 +29,7 @@ uvicorn app.main:app --reload --port 8000
 Then open http://localhost:8000/docs for the interactive API docs.
 
 By default the app loads model artifacts from
-`backend/machine_learning/models`. Override with the `KAIMAEMAE_MODELS_DIR`
+`backend/machine_learning/models`. Override with the `KAICHECKS_MODELS_DIR`
 environment variable if needed (this is the hook the future Docker image will
 use to point at a copied models folder).
 
