@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { MapPin, RefreshCw, X } from "lucide-react";
 
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { useSimulation } from "@/context/SimulationContext";
 import { REGION_LABELS } from "@/lib/constants";
-import { AI_SUMMARY_PLACEHOLDER } from "@/lib/insights";
+import { fetchSummary } from "@/lib/api";
 
 import { SafetyVerdict } from "./SafetyVerdict";
 import { BeachSummary } from "./BeachSummary";
@@ -19,9 +19,42 @@ import { BeachStats } from "./BeachStats";
  * placeholder, historical stats, and a path to a new simulation.
  */
 export function BeachDetailModal() {
-  const { selectedPrediction, selectBeach, rerun } = useSimulation();
+  const { selectedPrediction, selectBeach, rerun, scenario, result } = useSimulation();
+  const [summary, setSummary] = useState("");
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
   const open = Boolean(selectedPrediction);
+
+  useEffect(() => {
+    if (!selectedPrediction) return;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setSummary("");
+    setSummaryLoading(true);
+
+    fetchSummary(
+      {
+        unsafe_probability: selectedPrediction.unsafeProbability,
+        predicted_enterococcus_cfu: 0,
+        bav_threshold: 104,
+        unsafe_count: result.unsafeCount,
+        caution_count: result.cautionCount,
+        total_count: result.predictions.length,
+        month: scenario.month,
+        rain_7day: result.features.rain7day,
+        rain_24hr: result.features.rain24hr,
+        most_unsafe_beach: selectedPrediction.beach.name,
+        safest_beach: result.mostSafe[0]?.beach.name ?? "unknown",
+      },
+      controller.signal,
+    )
+      .then((text) => { setSummary(text); setSummaryLoading(false); })
+      .catch((err) => { if (err.name !== "AbortError") setSummaryLoading(false); });
+
+    return () => controller.abort();
+  }, [selectedPrediction, scenario.month, result]);
 
   // Close on Escape while the modal is open.
   useEffect(() => {
@@ -82,7 +115,7 @@ export function BeachDetailModal() {
             <div className="space-y-4 px-5 py-4">
               <SafetyVerdict prediction={selectedPrediction} />
 
-              <BeachSummary summary={AI_SUMMARY_PLACEHOLDER} />
+              <BeachSummary summary={summaryLoading ? "Generating summary…" : summary} />
 
               <BeachStats beach={selectedPrediction.beach} />
             </div>
