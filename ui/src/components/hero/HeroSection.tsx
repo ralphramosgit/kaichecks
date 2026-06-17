@@ -57,7 +57,7 @@ export function HeroSection({ onEnter }: { onEnter: () => void }) {
             leadingIcon={<Waves className="h-5 w-5" />}
             trailingIcon={<ArrowRight className="h-5 w-5" />}
           >
-            Launch the simulator
+            Launch simulator
           </Button>
         </motion.div>
 
