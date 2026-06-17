@@ -58,7 +58,10 @@ export function DataResultsPanel() {
       },
       controller.signal,
     )
-      .then((text) => { setSummary(text); setSummaryLoading(false); })
+      .then((text) => {
+        setSummary(text);
+        setSummaryLoading(false);
+      })
       .catch((err) => {
         if (err.name !== "AbortError") setSummaryLoading(false);
       });
@@ -90,7 +93,9 @@ export function DataResultsPanel() {
           {summaryLoading ? (
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 animate-spin rounded-full border-2 border-sage-400 border-t-transparent" />
-              <span className="text-xs text-ocean-500">Generating summary…</span>
+              <span className="text-xs text-ocean-500">
+                Generating summary…
+              </span>
             </div>
           ) : (
             <p className="text-xs leading-relaxed text-ocean-700">{summary}</p>
