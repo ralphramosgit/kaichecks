@@ -1,1 +1,5 @@
 resources/
+.idea/
+
+.env
+.env.local

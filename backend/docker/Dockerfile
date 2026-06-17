@@ -27,13 +27,11 @@ WORKDIR /app
 COPY fastAPI/requirements.txt ./requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy the application package and the trained model artifacts into the image.
-# The models are baked in so the container is self contained, which is what AWS
-# ECS wants: an immutable image with everything it needs to run.
+# Copy the application package into the image.
+# Models are pulled from S3 at startup by _sync_models_from_s3() in ml.py.
 COPY fastAPI/app ./app
-COPY machine_learning/models ./models
 
-# Point the app at the copied models folder. config.py reads this variable.
+# Point the app at the models folder where S3 artifacts will be downloaded.
 ENV KAICHECKS_MODELS_DIR=/app/models \
     KAICHECKS_CORS_ORIGINS=*
 
