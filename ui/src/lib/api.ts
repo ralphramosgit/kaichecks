@@ -60,6 +60,36 @@ export async function fetchBeaches(signal?: AbortSignal): Promise<Beach[]> {
   }));
 }
 
+export interface SummaryRequest {
+  unsafe_probability: number;
+  predicted_enterococcus_cfu: number;
+  bav_threshold: number;
+  unsafe_count: number;
+  caution_count: number;
+  total_count: number;
+  month: number;
+  rain_7day: number;
+  rain_24hr: number;
+  most_unsafe_beach: string;
+  safest_beach: string;
+}
+
+/** POST /summary -> GPT-generated plain-language summary of the simulation. */
+export async function fetchSummary(
+  req: SummaryRequest,
+  signal?: AbortSignal,
+): Promise<string> {
+  const res = await fetch(`${getApiBaseUrl()}/summary`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+    signal,
+  });
+  if (!res.ok) throw new Error(`POST /summary failed: ${res.status}`);
+  const d = await res.json();
+  return d.summary as string;
+}
+
 /** POST /predict -> the model's island-wide verdict for a rainfall scenario. */
 export async function predictScenario(
   rainfall7day: number[],

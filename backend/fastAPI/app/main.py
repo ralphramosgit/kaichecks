@@ -21,6 +21,8 @@ from .schemas import (
     HealthResponse,
     PredictionResponse,
     ScenarioRequest,
+    SummaryRequest,
+    SummaryResponse,
 )
 
 # Dedicated logger that always writes to stdout, so the real request inputs and
@@ -152,3 +154,52 @@ def beaches() -> list[Beach]:
         result[0].nearest_station_id,
     )
     return result
+
+
+_MONTHS = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+]
+
+
+@app.post("/summary", response_model=SummaryResponse)
+def generate_summary(request: SummaryRequest) -> SummaryResponse:
+    """Generate a plain-language AI summary for the active simulation result."""
+    from .config import get_openai_key
+
+    key = get_openai_key()
+    if not key:
+        return SummaryResponse(
+            summary="No OpenAI API key configured. Set OPENAI_API_KEY to enable AI summaries."
+        )
+
+    from openai import OpenAI  # type: ignore[import]
+
+    client = OpenAI(api_key=key)
+    month_name = _MONTHS[request.month - 1]
+
+    prompt = (
+        f"You are a beach water safety advisor for Oahu, Hawaii. "
+        f"Summarize this prediction in 2-3 concise sentences for a general audience. "
+        f"Be direct and practical. No markdown, no bullet points.\n\n"
+        f"Scenario: {request.rain_7day:.0f}mm of rain over 7 days in {month_name}, "
+        f"{request.rain_24hr:.0f}mm in the last 24 hours.\n"
+        f"Result: {request.unsafe_count} of {request.total_count} beaches flagged unsafe, "
+        f"{request.caution_count} at caution.\n"
+        f"Most at risk: {request.most_unsafe_beach} "
+        f"({request.unsafe_probability * 100:.0f}% chance of exceeding the swimming standard).\n"
+        f"Safest option: {request.safest_beach}.\n"
+        f"Predicted bacteria: {request.predicted_enterococcus_cfu:.0f} CFU/100mL "
+        f"(limit is {request.bav_threshold:.0f} CFU/100mL)."
+    )
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=150,
+        temperature=0.3,
+    )
+
+    summary = response.choices[0].message.content.strip()
+    logger.info("POST /summary  OUT: %d chars", len(summary))
+    return SummaryResponse(summary=summary)

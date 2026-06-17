@@ -54,3 +54,21 @@ class HealthResponse(BaseModel):
     models_loaded: bool
     primary_model: Optional[str] = None
     features: list[str] = []
+
+
+class SummaryRequest(BaseModel):
+    unsafe_probability: float
+    predicted_enterococcus_cfu: float
+    bav_threshold: float
+    unsafe_count: int
+    caution_count: int
+    total_count: int
+    month: int
+    rain_7day: float
+    rain_24hr: float
+    most_unsafe_beach: str
+    safest_beach: str
+
+
+class SummaryResponse(BaseModel):
+    summary: str
