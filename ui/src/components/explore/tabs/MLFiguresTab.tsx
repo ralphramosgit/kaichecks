@@ -106,6 +106,7 @@ function FigureCard({ figure }: { figure: Figure }) {
   return (
     <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-ocean-100 transition-shadow hover:shadow-md">
       <div className="bg-ocean-50 p-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={figure.file}
           alt={figure.title}
@@ -167,7 +168,7 @@ export function MLFiguresTab() {
           exceed the EPA Beach Action Value of 130 CFU/100 mL. The regressor predicts the raw
           bacteria count in log space. Neither model knows about individual beaches — they learn a
           single rainfall-to-bacteria relationship across all Oahu. Individual beach risk is
-          distributed post-prediction by the frontend using each beach's historical exceedance rate.
+          distributed post-prediction by the frontend using each beach&apos;s historical exceedance rate.
         </p>
         <div className="mt-4 flex flex-wrap gap-3 text-xs">
           <span className="rounded-full bg-ocean-700 px-3 py-1">7 rainfall features</span>
