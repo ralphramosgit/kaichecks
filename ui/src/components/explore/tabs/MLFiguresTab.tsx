@@ -605,7 +605,7 @@ function XGBClassifierTab() {
           <p>
             Each individual tree is a shallow, weak learner. With max depth = 4, each tree can make at most
             4 sequential splits, which is just enough to learn simple interactions between features (e.g.,
-            "rain_48hr is high AND month is November") without memorizing specific training examples.
+            &quot;rain_48hr is high AND month is November&quot;) without memorizing specific training examples.
             The learning rate of 0.05 means that each new tree contributes only 5% of its full prediction
             to the ensemble, forcing the model to learn incrementally over many trees rather than fitting
             large corrections in a few steps. This is a form of regularization that prevents overfitting.
@@ -932,7 +932,7 @@ function RandomForestTab() {
             the ensemble averages out the overfitting.
           </p>
           <p>
-            Class imbalance is handled through class_weight='balanced'. This parameter
+            Class imbalance is handled through class_weight=&apos;balanced&apos;. This parameter
             reweights each sample in the Gini impurity calculation at each node split,
             giving each unsafe sample a weight of approximately 22.63 (the inverse of its
             class frequency). This is mathematically equivalent to scale_pos_weight in
