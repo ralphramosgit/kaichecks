@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Waves } from "lucide-react";
+import { ArrowRight, Waves, Database } from "lucide-react";
 
 import { BackgroundShader } from "@/components/ui/background-shader";
 import { Button } from "@/components/ui/Button";
@@ -59,6 +60,15 @@ export function HeroSection({ onEnter }: { onEnter: () => void }) {
           >
             Launch simulator
           </Button>
+          <Link href="/explore">
+            <Button
+              size="lg"
+              variant="secondary"
+              leadingIcon={<Database className="h-5 w-5" />}
+            >
+              Data Explorer
+            </Button>
+          </Link>
         </motion.div>
 
         <div className="mt-12">

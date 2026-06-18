@@ -1,6 +1,7 @@
 "use client";
 
-import { CloudRain, CalendarDays, Home, Waves } from "lucide-react";
+import Link from "next/link";
+import { CloudRain, CalendarDays, Home, Waves, Database } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { useSimulation } from "@/context/SimulationContext";
@@ -42,6 +43,15 @@ export function AppHeader({ onRestart }: { onRestart: () => void }) {
             {MONTHS[scenario.month - 1]}
           </span>
         </div>
+        <Link href="/explore">
+          <Button
+            variant="secondary"
+            size="sm"
+            leadingIcon={<Database className="h-4 w-4" />}
+          >
+            Data Explorer
+          </Button>
+        </Link>
         <Button
           variant="secondary"
           size="sm"
