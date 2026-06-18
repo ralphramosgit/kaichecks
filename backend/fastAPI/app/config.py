@@ -35,7 +35,7 @@ class Settings:
 
         # ── S3 (model storage) ───────────────────────────────────────────────
         # Set these in the ECS task definition environment variables.
-        # Leave blank for local dev — models load from disk instead.
+        # Leave blank for local dev - models load from disk instead.
         self.s3_bucket: str = os.environ.get("KAICHECKS_MODELS_S3_BUCKET", "")
         self.s3_prefix: str = os.environ.get("KAICHECKS_MODELS_S3_PREFIX", "models/")
 
@@ -50,7 +50,7 @@ class Settings:
 
         # ── Secrets Manager (GPT API key) ─────────────────────────────────────
         # ARN of the kaichecks/openai secret in Secrets Manager.
-        # Leave blank for local dev — set OPENAI_API_KEY directly instead.
+        # Leave blank for local dev - set OPENAI_API_KEY directly instead.
         # AWS: set KAICHECKS_SECRETS_MANAGER_GPT_ARN in the task definition.
         self.secrets_manager_gpt_arn: str = os.environ.get(
             "KAICHECKS_SECRETS_MANAGER_GPT_ARN", ""

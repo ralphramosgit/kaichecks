@@ -46,7 +46,9 @@ export function DataTable<T extends object>({
     return data.filter((row) =>
       columns.some((col) => {
         const v = (row as Record<string, unknown>)[col.key];
-        return v !== null && v !== undefined && String(v).toLowerCase().includes(q);
+        return (
+          v !== null && v !== undefined && String(v).toLowerCase().includes(q)
+        );
       }),
     );
   }, [data, search, columns]);
@@ -58,9 +60,10 @@ export function DataTable<T extends object>({
       const bv = (b as Record<string, unknown>)[sortKey];
       if (av === null || av === undefined) return 1;
       if (bv === null || bv === undefined) return -1;
-      const cmp = typeof av === "number" && typeof bv === "number"
-        ? av - bv
-        : String(av).localeCompare(String(bv));
+      const cmp =
+        typeof av === "number" && typeof bv === "number"
+          ? av - bv
+          : String(av).localeCompare(String(bv));
       return sortDir === "asc" ? cmp : -cmp;
     });
   }, [filtered, sortKey, sortDir]);
@@ -105,14 +108,18 @@ export function DataTable<T extends object>({
         </p>
         {isNotFound && filename && (
           <p className="mt-2 text-xs text-ocean-500">
-            Copy <code className="rounded bg-sand-200 px-1 py-0.5 font-mono">{filename}</code> into{" "}
-            <code className="rounded bg-sand-200 px-1 py-0.5 font-mono">ui/public/data/</code> to
-            enable this table.
+            Copy{" "}
+            <code className="rounded bg-sand-200 px-1 py-0.5 font-mono">
+              {filename}
+            </code>{" "}
+            into{" "}
+            <code className="rounded bg-sand-200 px-1 py-0.5 font-mono">
+              ui/public/data/
+            </code>{" "}
+            to enable this table.
           </p>
         )}
-        {!isNotFound && (
-          <p className="mt-1 text-xs text-ocean-400">{error}</p>
-        )}
+        {!isNotFound && <p className="mt-1 text-xs text-ocean-400">{error}</p>}
       </div>
     );
   }
@@ -168,7 +175,10 @@ export function DataTable<T extends object>({
           <tbody>
             {paginated.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="py-10 text-center text-xs text-ocean-400">
+                <td
+                  colSpan={columns.length}
+                  className="py-10 text-center text-xs text-ocean-400"
+                >
                   No matching rows
                 </td>
               </tr>
@@ -187,8 +197,13 @@ export function DataTable<T extends object>({
                       )}
                     >
                       {col.render
-                        ? col.render((row as Record<string, unknown>)[col.key], row)
-                        : String((row as Record<string, unknown>)[col.key] ?? "—")}
+                        ? col.render(
+                            (row as Record<string, unknown>)[col.key],
+                            row,
+                          )
+                        : String(
+                            (row as Record<string, unknown>)[col.key] ?? "-",
+                          )}
                     </td>
                   ))}
                 </tr>
@@ -201,7 +216,8 @@ export function DataTable<T extends object>({
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-xs text-ocean-500">
           <span>
-            Page {page + 1} of {totalPages} ({sorted.length.toLocaleString()} rows)
+            Page {page + 1} of {totalPages} ({sorted.length.toLocaleString()}{" "}
+            rows)
           </span>
           <div className="flex items-center gap-1">
             <button

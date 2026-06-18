@@ -1,6 +1,12 @@
 "use client";
 
-import { CloudRain, CheckCircle, AlertTriangle, Info, Download } from "lucide-react";
+import {
+  CloudRain,
+  CheckCircle,
+  AlertTriangle,
+  Info,
+  Download,
+} from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -58,7 +64,15 @@ interface PipelineStepProps {
   last?: boolean;
 }
 
-function PipelineStep({ num, title, file, rows, entities, description, last }: PipelineStepProps) {
+function PipelineStep({
+  num,
+  title,
+  file,
+  rows,
+  entities,
+  description,
+  last,
+}: PipelineStepProps) {
   return (
     <div className="flex gap-4">
       <div className="flex flex-col items-center">
@@ -78,7 +92,9 @@ function PipelineStep({ num, title, file, rows, entities, description, last }: P
             {entities}
           </span>
         </div>
-        <p className="mt-2 text-xs leading-relaxed text-ocean-600">{description}</p>
+        <p className="mt-2 text-xs leading-relaxed text-ocean-600">
+          {description}
+        </p>
       </div>
     </div>
   );
@@ -108,10 +124,20 @@ function CleaningRule({ icon, title, detail, type }: CleaningRuleProps) {
   );
 }
 
-function StatCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function StatCard({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-ocean-100">
-      <p className="text-xs font-semibold uppercase tracking-wide text-ocean-400">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-ocean-400">
+        {label}
+      </p>
       <p className="mt-1 text-2xl font-bold text-ocean-800">{value}</p>
       {sub && <p className="mt-0.5 text-xs text-ocean-500">{sub}</p>}
     </div>
@@ -119,7 +145,9 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 }
 
 export function RainfallTab() {
-  const { data, loading } = useJsonData<RainfallSummary>("/data/rainfall_summary.json");
+  const { data, loading } = useJsonData<RainfallSummary>(
+    "/data/rainfall_summary.json",
+  );
 
   const s3Base = process.env.NEXT_PUBLIC_DATA_S3_URL;
 
@@ -132,7 +160,9 @@ export function RainfallTab() {
             <CloudRain className="h-5 w-5" />
           </span>
           <div>
-            <h1 className="text-xl font-bold text-ocean-900">Rainfall Dataset</h1>
+            <h1 className="text-xl font-bold text-ocean-900">
+              Rainfall Dataset
+            </h1>
             <p className="text-sm text-ocean-500">
               HCDP daily rainfall · 175 raw → 165 clean stations · 1990 – 2024
             </p>
@@ -151,9 +181,12 @@ export function RainfallTab() {
         </div>
         <div className="mt-3 rounded-xl border border-caution-300 bg-caution-100 px-4 py-2.5">
           <p className="text-xs text-caution-500">
-            <strong>Note:</strong> The raw rainfall file has 1.46M rows (~80 MB) — too large to
-            load in the browser. The charts below use pre-aggregated statistics.
-            {s3Base ? " The full CSV is available via the download button above." : ""}
+            <strong>Note:</strong> The raw rainfall file has 1.46M rows (~80 MB)
+            - too large to load in the browser. The charts below use
+            pre-aggregated statistics.
+            {s3Base
+              ? " The full CSV is available via the download button above."
+              : ""}
           </p>
         </div>
       </div>
@@ -174,14 +207,20 @@ export function RainfallTab() {
           />
           <StatCard
             label="Clean rows"
-            value={loading ? "…" : (data ? (data.summary.clean_rows / 1e6).toFixed(2) + "M" : "1.46M")}
+            value={
+              loading
+                ? "…"
+                : data
+                  ? (data.summary.clean_rows / 1e6).toFixed(2) + "M"
+                  : "1.46M"
+            }
             sub="after cleaning"
           />
           <StatCard label="Missing values" value="0" sub="in clean file" />
         </div>
       </div>
 
-      {/* Live charts — only shown when JSON is loaded */}
+      {/* Live charts - only shown when JSON is loaded */}
       {data && (
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Monthly average rainfall */}
@@ -194,15 +233,24 @@ export function RainfallTab() {
             </p>
             <div className="mb-3 flex gap-4 text-xs">
               <span className="rounded-full bg-ocean-50 px-2.5 py-0.5 font-semibold text-ocean-600 ring-1 ring-ocean-100">
-                Wet {data.season_split.wet_months}: {data.season_split.wet_avg_mm} mm/day
+                Wet {data.season_split.wet_months}:{" "}
+                {data.season_split.wet_avg_mm} mm/day
               </span>
               <span className="rounded-full bg-sand-100 px-2.5 py-0.5 font-semibold text-sand-500 ring-1 ring-sand-200">
-                Dry {data.season_split.dry_months}: {data.season_split.dry_avg_mm} mm/day
+                Dry {data.season_split.dry_months}:{" "}
+                {data.season_split.dry_avg_mm} mm/day
               </span>
             </div>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={data.monthly_island} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EAF7FC" vertical={false} />
+              <BarChart
+                data={data.monthly_island}
+                margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#EAF7FC"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="month_label"
                   tick={{ fontSize: 10, fill: "#6FC4E4" }}
@@ -214,17 +262,34 @@ export function RainfallTab() {
                   tick={{ fontSize: 10, fill: "#6FC4E4" }}
                   axisLine={false}
                   tickLine={false}
-                  label={{ value: "mm/day", angle: -90, position: "insideLeft", fontSize: 9, fill: "#6FC4E4" }}
+                  label={{
+                    value: "mm/day",
+                    angle: -90,
+                    position: "insideLeft",
+                    fontSize: 9,
+                    fill: "#6FC4E4",
+                  }}
                 />
                 <Tooltip
-                  formatter={(v: number) => [`${v} mm/day`, "Avg daily rainfall"]}
-                  contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #A2DBEF" }}
+                  formatter={(v: number) => [
+                    `${v} mm/day`,
+                    "Avg daily rainfall",
+                  ]}
+                  contentStyle={{
+                    fontSize: 12,
+                    borderRadius: 8,
+                    border: "1px solid #A2DBEF",
+                  }}
                 />
                 <Bar dataKey="avg_mm" radius={[4, 4, 0, 0]} maxBarSize={30}>
                   {data.monthly_island.map((entry) => (
                     <Cell
                       key={entry.month}
-                      fill={[11, 12, 1, 2, 3].includes(entry.month) ? "#176C99" : "#3FA8D4"}
+                      fill={
+                        [11, 12, 1, 2, 3].includes(entry.month)
+                          ? "#176C99"
+                          : "#3FA8D4"
+                      }
                     />
                   ))}
                 </Bar>
@@ -241,8 +306,15 @@ export function RainfallTab() {
               Annual mean across all stations · long-term trend line
             </p>
             <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={data.yearly} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EAF7FC" vertical={false} />
+              <LineChart
+                data={data.yearly}
+                margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#EAF7FC"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="year"
                   tick={{ fontSize: 9, fill: "#6FC4E4" }}
@@ -254,12 +326,25 @@ export function RainfallTab() {
                   tick={{ fontSize: 10, fill: "#6FC4E4" }}
                   axisLine={false}
                   tickLine={false}
-                  label={{ value: "mm/day", angle: -90, position: "insideLeft", fontSize: 9, fill: "#6FC4E4" }}
+                  label={{
+                    value: "mm/day",
+                    angle: -90,
+                    position: "insideLeft",
+                    fontSize: 9,
+                    fill: "#6FC4E4",
+                  }}
                 />
                 <Tooltip
-                  formatter={(v: number) => [`${v} mm/day`, "Avg daily rainfall"]}
+                  formatter={(v: number) => [
+                    `${v} mm/day`,
+                    "Avg daily rainfall",
+                  ]}
                   labelFormatter={(l) => `Year ${l}`}
-                  contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #A2DBEF" }}
+                  contentStyle={{
+                    fontSize: 12,
+                    borderRadius: 8,
+                    border: "1px solid #A2DBEF",
+                  }}
                 />
                 <Line
                   type="monotone"
@@ -279,7 +364,8 @@ export function RainfallTab() {
               Top 15 Wettest Stations
             </h2>
             <p className="mb-4 text-xs text-ocean-400">
-              Ranked by average daily rainfall · higher elevation = more orographic rainfall
+              Ranked by average daily rainfall · higher elevation = more
+              orographic rainfall
             </p>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
@@ -287,13 +373,22 @@ export function RainfallTab() {
                 layout="vertical"
                 margin={{ top: 0, right: 80, bottom: 0, left: 160 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="#EAF7FC" horizontal={false} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#EAF7FC"
+                  horizontal={false}
+                />
                 <XAxis
                   type="number"
                   tick={{ fontSize: 10, fill: "#6FC4E4" }}
                   axisLine={false}
                   tickLine={false}
-                  label={{ value: "avg mm/day", position: "bottom", fontSize: 10, fill: "#6FC4E4" }}
+                  label={{
+                    value: "avg mm/day",
+                    position: "bottom",
+                    fontSize: 10,
+                    fill: "#6FC4E4",
+                  }}
                 />
                 <YAxis
                   type="category"
@@ -308,9 +403,18 @@ export function RainfallTab() {
                     `${v} mm/day  (elev ${props.payload.elevation_m}m)`,
                     "Avg daily rainfall",
                   ]}
-                  contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #A2DBEF" }}
+                  contentStyle={{
+                    fontSize: 12,
+                    borderRadius: 8,
+                    border: "1px solid #A2DBEF",
+                  }}
                 />
-                <Bar dataKey="avg_mm" fill="#176C99" radius={[0, 4, 4, 0]} maxBarSize={16} />
+                <Bar
+                  dataKey="avg_mm"
+                  fill="#176C99"
+                  radius={[0, 4, 4, 0]}
+                  maxBarSize={16}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -336,7 +440,7 @@ export function RainfallTab() {
             file="merge_hcdp_data.script.ipynb → raw_data/rainfall_data.csv"
             rows="1,482,457 rows"
             entities="175 stations"
-            description="436 CSVs arrive in wide format — one row per station, one column per day. This notebook stacks all files, melts wide to long, filters to Oahu (island == 'OA'), and parses column names back to real YYYY-MM-DD dates."
+            description="436 CSVs arrive in wide format - one row per station, one column per day. This notebook stacks all files, melts wide to long, filters to Oahu (island == 'OA'), and parses column names back to real YYYY-MM-DD dates."
           />
           <PipelineStep
             num={2}
@@ -380,13 +484,13 @@ export function RainfallTab() {
               type="removed"
               icon={<AlertTriangle className="h-4 w-4" />}
               title="Negative readings zeroed"
-              detail="Negative rainfall is physically impossible — treated as missing data (sensor error or data entry issue)."
+              detail="Negative rainfall is physically impossible - treated as missing data (sensor error or data entry issue)."
             />
             <CleaningRule
               type="kept"
               icon={<CheckCircle className="h-4 w-4" />}
               title="1–2 day gaps interpolated"
-              detail="Short gaps of 1 or 2 days are filled by linear interpolation between the surrounding real readings — almost certainly sensor outages, not real weather events."
+              detail="Short gaps of 1 or 2 days are filled by linear interpolation between the surrounding real readings - almost certainly sensor outages, not real weather events."
             />
             <CleaningRule
               type="removed"
@@ -407,9 +511,10 @@ export function RainfallTab() {
               Why only 35 of 165 gauges appear in the final model?
             </p>
             <p className="mt-1.5 text-xs leading-relaxed text-ocean-600">
-              Each of the 84 beaches is assigned to its nearest gauge by haversine distance. Of the
-              165 clean gauges, only 35 ended up being the closest gauge for at least one beach. The
-              remaining 130 gauges are in areas with no nearby beach sampling sites.
+              Each of the 84 beaches is assigned to its nearest gauge by
+              haversine distance. Of the 165 clean gauges, only 35 ended up
+              being the closest gauge for at least one beach. The remaining 130
+              gauges are in areas with no nearby beach sampling sites.
             </p>
           </div>
         </div>

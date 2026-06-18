@@ -65,7 +65,7 @@ def _sync_models_from_s3() -> None:
     """
     settings = get_settings()
     if not settings.use_s3:
-        return  # local dev — use models already on disk
+        return  # local dev - use models already on disk
 
     import boto3  # type: ignore[import]
 

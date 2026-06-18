@@ -13,7 +13,7 @@
 **/.ipynb_checkpoints/
 machine_learning/figures/
 
-# Model artifacts are pulled from S3 at startup — no need to bake into the image.
+# Model artifacts are pulled from S3 at startup - no need to bake into the image.
 machine_learning/models/
 
 # Docs and local notes.
