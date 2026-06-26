@@ -13,6 +13,7 @@ import { fetchSummary } from "@/lib/api";
 import { SafetyVerdict } from "./SafetyVerdict";
 import { BeachSummary } from "./BeachSummary";
 import { BeachStats } from "./BeachStats";
+import { BeachCfuChart } from "./BeachCfuChart";
 
 /**
  * Detail modal for a selected beach: the safety verdict, an AI summary
@@ -116,6 +117,8 @@ export function BeachDetailModal() {
               <SafetyVerdict prediction={selectedPrediction} />
 
               <BeachSummary summary={summaryLoading ? "Generating summary…" : summary} />
+
+              <BeachCfuChart locationId={selectedPrediction.beach.locationId} />
 
               <BeachStats beach={selectedPrediction.beach} />
             </div>

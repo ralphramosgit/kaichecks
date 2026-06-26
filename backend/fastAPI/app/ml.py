@@ -11,6 +11,7 @@ last, representing the days strictly before the sample date.
 """
 
 import json
+import math
 import os
 from typing import Optional
 
@@ -124,6 +125,13 @@ def build_features(rainfall_7day: list[float], month: int) -> dict[str, float]:
         else:
             break
 
+    # Month is encoded cyclically so the model treats December (12) and January
+    # (1) as adjacent rather than 11 units apart. Without this, the model learns
+    # a spurious linear ordering where late-year months read as "past the peak"
+    # and underestimate wet-season risk.
+    month_sin = math.sin(2 * math.pi * month / 12)
+    month_cos = math.cos(2 * math.pi * month / 12)
+
     return {
         "rain_24hr": rain_24hr,
         "rain_48hr": rain_48hr,
@@ -131,7 +139,8 @@ def build_features(rainfall_7day: list[float], month: int) -> dict[str, float]:
         "rain_7day": rain_7day,
         "days_since_rain": float(days_since_rain),
         "max_rain_3day": max_rain_3day,
-        "month": float(month),
+        "month_sin": month_sin,
+        "month_cos": month_cos,
     }
 
 
